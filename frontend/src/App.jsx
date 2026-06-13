@@ -5,6 +5,7 @@ import { AppShell } from "./layout/AppShell";
 import { DeliveryWorkspace } from "./features/delivery/DeliveryWorkspace";
 import { PackageShowcase } from "./features/packages/PackageShowcase";
 import { ScheduleBooking } from "./features/photographers/ScheduleBooking";
+import { ReschedulePanel } from "./features/photographers/ReschedulePanel";
 
 export default function App() {
   const [packages, setPackages] = useState([]);
@@ -29,6 +30,7 @@ export default function App() {
       {error && <div className="notice notice-error">{error}</div>}
       <PackageShowcase packages={packages} loading={loading} />
       <ScheduleBooking packages={packages} photographers={photographers} />
+      <ReschedulePanel packages={packages} photographers={photographers} />
       <DeliveryWorkspace deliveries={deliveries} onDeliveriesChange={setDeliveries} />
     </AppShell>
   );

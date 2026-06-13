@@ -70,6 +70,8 @@ PHOTOGRAPHERS = [
 
 BOOKINGS = []
 
+RESCHEDULE_REQUESTS = []
+
 DELIVERIES = [
     {
         "code": "STUDIO-2026-0618",
@@ -140,6 +142,27 @@ def create_booking(payload):
         "time": payload["time"],
         "notes": payload.get("notes", ""),
         "status": "待确认",
+        "rescheduleHistory": [],
     }
     BOOKINGS.insert(0, booking)
     return booking
+
+
+def create_reschedule_request(booking_id, payload):
+    booking = next((b for b in BOOKINGS if b["id"] == booking_id), None)
+    if not booking:
+        return None, "预约不存在"
+
+    request_data = {
+        "id": str(uuid4()),
+        "bookingId": booking_id,
+        "createdAt": date.today().isoformat(),
+        "oldDate": booking["date"],
+        "oldTime": booking["time"],
+        "newDate": payload["newDate"],
+        "newTime": payload["newTime"],
+        "reason": payload.get("reason", ""),
+        "status": "待确认",
+    }
+    RESCHEDULE_REQUESTS.insert(0, request_data)
+    return request_data, None

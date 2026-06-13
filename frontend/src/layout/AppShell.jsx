@@ -1,4 +1,4 @@
-import { CalendarCheck, Camera, Images, Sparkles } from "lucide-react";
+import { CalendarCheck, Camera, Images, RefreshCw, Sparkles } from "lucide-react";
 
 export function AppShell({ children }) {
   return (
@@ -14,6 +14,7 @@ export function AppShell({ children }) {
         <nav>
           <a href="#packages">套餐</a>
           <a href="#booking">预约</a>
+          <a href="#reschedule">改期</a>
           <a href="#delivery">交付选片</a>
         </nav>
       </header>
