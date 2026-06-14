@@ -156,12 +156,12 @@ class TestExceedSelectionLimit:
         data = response.get_json()
         assert data["selection"]["count"] == 6
 
-    def test_selecting_over_limit_should_be_rejected(self, client):
+    def test_selecting_different_photos_over_limit_should_be_rejected(self, client):
         response = client.post(
             "/api/selections",
             json={
                 "code": "STUDIO-2026-0618",
-                "photoIds": ["p01", "p02", "p03", "p04", "p05", "p06", "p01"],
+                "photoIds": ["p01", "p02", "p03", "p04", "p05", "p06", "p07"],
             },
         )
         assert response.status_code == 400
@@ -169,6 +169,31 @@ class TestExceedSelectionLimit:
         assert "超出精修上限" in data["message"]
         assert data["limit"] == 6
         assert data["selected"] == 7
+
+    def test_duplicate_photo_ids_are_deduplicated(self, client):
+        response = client.post(
+            "/api/selections",
+            json={
+                "code": "STUDIO-2026-0618",
+                "photoIds": ["p01", "p01", "p02", "p02", "p03"],
+            },
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["selection"]["count"] == 3
+        assert data["selection"]["photoIds"] == ["p01", "p02", "p03"]
+
+    def test_duplicates_within_limit_do_not_trigger_overflow(self, client):
+        response = client.post(
+            "/api/selections",
+            json={
+                "code": "STUDIO-2026-0618",
+                "photoIds": ["p01", "p02", "p03", "p04", "p05", "p06", "p01", "p02"],
+            },
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["selection"]["count"] == 6
 
     def test_empty_selection_succeeds(self, client):
         response = client.post(
@@ -195,7 +220,7 @@ class TestSelectionSummaryUpdate:
         summary_after = list_after.get_json()[0]
         assert summary_after["selectedCount"] == 4
         assert summary_after["selectedCount"] != initial_selected
-        assert summary_after["photoCount"] == 6
+        assert summary_after["photoCount"] == 8
 
     def test_saving_selection_updates_photo_selected_flags(self, client):
         client.post(
@@ -210,6 +235,48 @@ class TestSelectionSummaryUpdate:
         assert selected_map["p05"] is True
         assert selected_map["p02"] is False
         assert selected_map["p03"] is False
+
+    def test_re_saving_with_different_photos_updates_summary(self, client):
+        client.post(
+            "/api/selections",
+            json={"code": "STUDIO-2026-0618", "photoIds": ["p01", "p02", "p03"]},
+        )
+        list_mid = client.get("/api/deliveries")
+        assert list_mid.get_json()[0]["selectedCount"] == 3
+
+        client.post(
+            "/api/selections",
+            json={"code": "STUDIO-2026-0618", "photoIds": ["p04", "p05", "p06", "p07"]},
+        )
+        list_after = client.get("/api/deliveries")
+        assert list_after.get_json()[0]["selectedCount"] == 4
+
+    def test_re_saving_with_different_photos_updates_each_photo_state(self, client):
+        client.post(
+            "/api/selections",
+            json={"code": "STUDIO-2026-0618", "photoIds": ["p01", "p02", "p03"]},
+        )
+        delivery_mid = client.get("/api/deliveries/STUDIO-2026-0618").get_json()
+        selected_mid = {p["id"]: p["selected"] for p in delivery_mid["photos"]}
+        assert selected_mid["p01"] is True
+        assert selected_mid["p02"] is True
+        assert selected_mid["p03"] is True
+        assert selected_mid["p04"] is False
+        assert selected_mid["p07"] is False
+
+        client.post(
+            "/api/selections",
+            json={"code": "STUDIO-2026-0618", "photoIds": ["p04", "p05", "p07", "p08"]},
+        )
+        delivery_after = client.get("/api/deliveries/STUDIO-2026-0618").get_json()
+        selected_after = {p["id"]: p["selected"] for p in delivery_after["photos"]}
+        assert selected_after["p01"] is False
+        assert selected_after["p02"] is False
+        assert selected_after["p03"] is False
+        assert selected_after["p04"] is True
+        assert selected_after["p05"] is True
+        assert selected_after["p07"] is True
+        assert selected_after["p08"] is True
 
     def test_selection_record_is_persisted(self, client):
         before_count = len(SELECTIONS)

@@ -33,6 +33,9 @@ export function DeliveryWorkspace({ deliveries, onDeliveriesChange }) {
   async function submitSelection() {
     const result = await saveSelection({ code: delivery.code, photoIds: selectedIds });
     setMessage(result.message);
+    const updated = await getDelivery(delivery.code);
+    setDelivery(updated);
+    setSelectedIds(updated.photos.filter((photo) => photo.selected).map((photo) => photo.id));
     const summary = await getDeliveries();
     onDeliveriesChange(summary);
   }

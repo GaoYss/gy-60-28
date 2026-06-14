@@ -112,6 +112,16 @@ DELIVERIES = [
                 "url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80",
                 "selected": True,
             },
+            {
+                "id": "p07",
+                "url": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
+                "selected": False,
+            },
+            {
+                "id": "p08",
+                "url": "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=80",
+                "selected": False,
+            },
         ],
     }
 ]
