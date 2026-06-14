@@ -31,6 +31,16 @@ def submit_booking():
     if payload["time"] not in available_slots:
         return jsonify({"message": "该时间不可预约，请重新选择档期"}), 409
 
+    occupied = any(
+        b["photographerId"] == payload["photographerId"]
+        and b["date"] == payload["date"]
+        and b["time"] == payload["time"]
+        and b["status"] != "已取消"
+        for b in BOOKINGS
+    )
+    if occupied:
+        return jsonify({"message": "该档期已被占用，请选择其他时间"}), 409
+
     booking = create_booking(payload)
     return jsonify(booking), 201
 

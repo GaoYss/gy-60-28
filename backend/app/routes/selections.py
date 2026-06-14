@@ -23,6 +23,13 @@ def save_selection():
     if invalid:
         return jsonify({"message": "包含无效照片", "photoIds": invalid}), 400
 
+    if len(photo_ids) > delivery["retouchLimit"]:
+        return jsonify({
+            "message": f"选片数量超出精修上限，最多可选 {delivery['retouchLimit']} 张",
+            "limit": delivery["retouchLimit"],
+            "selected": len(photo_ids),
+        }), 400
+
     for photo in delivery["photos"]:
         photo["selected"] = photo["id"] in photo_ids
 
